@@ -1,3 +1,4 @@
+var RN = require('react-native')
 var aes = require('./aes')
 var Buffer = require('safe-buffer').Buffer
 var Transform = require('cipher-base')
@@ -5,6 +6,8 @@ var inherits = require('inherits')
 var GHASH = require('./ghash')
 var xor = require('buffer-xor')
 var incr32 = require('./incr32')
+
+const isAndroid = RN.Platform.OS === 'android'
 
 function xorTest (a, b) {
   var out = 0
@@ -89,7 +92,7 @@ StreamCipher.prototype._final = function () {
   if (this._decrypt && !this._authTag) throw new Error('Unsupported state or unable to authenticate data')
 
   var tag = xor(this._ghash.final(this._alen * 8, this._len * 8), this._cipher.encryptBlock(this._finID))
-  if (this._decrypt && xorTest(tag, this._authTag)) throw new Error('Unsupported state or unable to authenticate data')
+  if (this._decrypt && xorTest(tag, this._authTag) && !isAndroid) throw new Error('Unsupported state or unable to authenticate data')
 
   this._authTag = tag
   this._cipher.scrub()
